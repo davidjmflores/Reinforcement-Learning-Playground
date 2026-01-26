@@ -1,4 +1,4 @@
-from chapter_3.envs.gridworld import Gridworld
+from environments.ch3_gridworld import Gridworld
 
 def run_basic_tests():
     env = Gridworld()

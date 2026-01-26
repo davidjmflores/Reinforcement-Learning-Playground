@@ -1,14 +1,13 @@
-from envs.stationary_karmedbandit import StationaryKArmedBandit
-from algs.epsilon_greedy import EpsilonGreedyAgent
+from environments.ch2_stationary_karmedbandit import StationaryKArmedBandit
+from algorithms.greedy import GreedyAgent
 import numpy as np
 import matplotlib.pyplot as plt
 
 k = 10
-epsilon = 0.01
 mean_q = 0.0
 sigma_q = 1.0
 sigma_r = 1.0
-T = 3000
+T = 1000
 runs = 2000
 base_seed = 0
 
@@ -17,10 +16,10 @@ optimal_count = np.zeros(T, dtype=int)
 
 for run in range(runs):
     env_seed = base_seed + run
-    agent_seed = base_seed + 10000 + run
+    agent_seed = base_seed + run
 
     env = StationaryKArmedBandit(k=k, mean_q=mean_q,sigma_q=sigma_q,sigma_r=sigma_r, seed=env_seed)
-    agent = EpsilonGreedyAgent(k=k, epsilon=epsilon)
+    agent = GreedyAgent(k=k)
     agent_rng = np.random.default_rng(agent_seed)
 
     env.reset()
@@ -36,7 +35,7 @@ avg_reward = reward_sum / runs
 opt_frac = optimal_count / runs
 
 print("Final avg reward: ", avg_reward[-1])
-print("Final % Optimal: ", 100 * opt_frac[-1], "%")
+print("Final % optimal: ", 100 * opt_frac[-1])
 
 steps = np.arange(T)
 
@@ -45,7 +44,7 @@ plt.figure()
 plt.plot(steps, avg_reward)
 plt.xlabel("Steps")
 plt.ylabel("Average Reward")
-plt.title("Epsilon Greedy: Average Reward vs. Steps")
+plt.title("Greedy: Average Reward vs. Steps")
 plt.grid(True)
 plt.show()
 
@@ -54,6 +53,6 @@ plt.figure()
 plt.plot(steps, 100 * opt_frac)
 plt.xlabel("Steps")
 plt.ylabel("% Optimal Action")
-plt.title("Epsilon Greedy: % Optimal Action vs Steps")
+plt.title("Greedy: % Optimal Action vs Steps")
 plt.grid(True)
 plt.show()

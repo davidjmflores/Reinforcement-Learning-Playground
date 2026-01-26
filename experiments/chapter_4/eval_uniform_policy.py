@@ -1,7 +1,7 @@
-from envs.gridworld_terminating import GridworldTerminating
-from algs.iterative_policy_evaluation import IterativePolicyEvaluation
+from environments.ch4_gridworld_terminating import GridworldTerminating
+from algorithms.iterative_policy_evaluation import IterativePolicyEvaluation
 from policies.uniform_random import UniformRandom
-from experiments.plot_eval_snapshots import plot_selected_ks
+from experiments.chapter_4.plot_eval_snapshots import plot_selected_ks
 
 gamma = 1.0
 v0 = 0.0

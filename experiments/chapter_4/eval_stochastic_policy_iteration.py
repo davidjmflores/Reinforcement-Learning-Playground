@@ -1,13 +1,13 @@
-from envs.gridworld_terminating import GridworldTerminating
-from algs.stochastic_policy_iteration import StochasticPolicyIteration
+from environments.ch4_gridworld_terminating import GridworldTerminating
+from algorithms.policy_iteration import PolicyIteration
 from policies.tabular_stochastic_policy import TabularStochasticPolicy
-from experiments.plot_eval_snapshots import plot_values_by_policy_iteration, plot_eval_sweeps_for_policy, plot_policy
+from experiments.chapter_4.plot_eval_snapshots import plot_values_by_policy_iteration, plot_eval_sweeps_for_policy, plot_policy
 
 gamma = 1.0
 
 env = GridworldTerminating()
 policy = TabularStochasticPolicy(env.states(), env.actions)
-evaluator = StochasticPolicyIteration(env, policy, v0 =0.0, theta = 1e-4, gamma=gamma)
+evaluator = PolicyIteration(env, policy, v0 =0.0, theta = 1e-4, gamma=gamma)
 
 p, v, log = evaluator.iterate(record=True, record_eval=True)
 plot_values_by_policy_iteration(log, env)

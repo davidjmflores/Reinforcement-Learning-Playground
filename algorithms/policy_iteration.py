@@ -3,7 +3,7 @@
 # v_0: value init
 
 # the deterministic pseudocode presented on pg. 80 isn't applicable to Example 4.1
-class StochasticPolicyIteration: 
+class PolicyIteration: 
     def __init__(self, env, policy, v0, theta, gamma):
         self.env = env
         self.policy = policy
@@ -11,6 +11,15 @@ class StochasticPolicyIteration:
         self.gamma = gamma
         self.v = {s: v0 for s in self.env.states()}
         self.tolerance = 1e-6 # for argmax over actions. Accounts for minimal floating point issues
+
+    # Added so that same file can be used for both state-indep and state-dep actions
+    def actions_for(self, s):
+        # If env exposes actions(s), use it (Jack's).
+        if hasattr(self.env, "actions") and callable(self.env.actions):
+            return self.env.actions(s)
+
+        # Otherwise assume env.actions is an iterable (Gridworld).
+        return self.env.actions
 
     def iterate(self, record=False, record_eval=False): # For running the solver
         log = None
@@ -54,9 +63,9 @@ class StochasticPolicyIteration:
                 v_new = 0.0
                 pi = self.policy.pi(s)
 
-                for a in self.env.actions:
+                for a in self.actions_for(s):
                     for (p, s_prime, r) in self.env.transitions(s, a):
-                        v_new += pi[a] * p * (r + self.gamma * self.v[s_prime])
+                        v_new += pi.get(a, 0.0) * p * (r + self.gamma * self.v[s_prime])
 
                 delta = max(delta, abs(v_old - v_new))
                 self.v[s] = v_new
@@ -76,7 +85,7 @@ class StochasticPolicyIteration:
             old_pi = self.policy.pi(s).copy()
 
             q = {}
-            for a in self.env.actions:
+            for a in self.actions_for(s):
                 q_sa = 0.0
                 for (p, s_prime, r) in self.env.transitions(s, a):
                     q_sa += p * (r + self.gamma * self.v[s_prime])
