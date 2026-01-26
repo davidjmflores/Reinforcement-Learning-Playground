@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import math
 
 def plot_value_grid(V, n_rows, n_cols, title=""):
     grid = np.zeros((n_rows, n_cols), dtype=float)
@@ -74,3 +75,66 @@ def plot_policy(policy_snapshot, env, title=""):
     ax.set_title(title)
     ax.grid(True)
     plt.show()
+
+def _infer_capacity_from_env(env):
+    return int(env.max_capacity)
+
+
+def plot_jacks_policy(policy_snapshot, env, title=None, show_numbers=True):
+    cap = _infer_capacity_from_env(env)
+    n = cap + 1
+
+    A = [[0 for _ in range(n)] for __ in range(n)]
+    for i in range(n):
+        for j in range(n):
+            dist = policy_snapshot[(i, j)]
+            # choose the most-probable action (should be deterministic after improvement)
+            a_star = max(dist.items(), key=lambda kv: kv[1])[0]
+            A[i][j] = a_star
+
+    plt.figure()
+    plt.imshow(A, origin="lower", aspect="equal")
+    plt.colorbar(label="cars moved overnight (a)")
+    plt.xlabel("cars at location 2")
+    plt.ylabel("cars at location 1")
+    if title:
+        plt.title(title)
+
+    if show_numbers:
+        for i in range(n):
+            for j in range(n):
+                plt.text(j, i, str(A[i][j]), ha="center", va="center", fontsize=6)
+
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_jacks_value(V, env, title=None, show_numbers=False):
+    """
+    V: dict { state_tuple: value }
+    env: JacksCarRental
+    """
+    cap = _infer_capacity_from_env(env)
+    n = cap + 1
+
+    grid = [[0.0 for _ in range(n)] for __ in range(n)]
+    for i in range(n):
+        for j in range(n):
+            grid[i][j] = float(V[(i, j)])
+
+    plt.figure()
+    plt.imshow(grid, origin="lower", aspect="equal")
+    plt.colorbar(label="V(s)")
+    plt.xlabel("cars at location 2")
+    plt.ylabel("cars at location 1")
+    if title:
+        plt.title(title)
+
+    if show_numbers:
+        for i in range(n):
+            for j in range(n):
+                plt.text(j, i, f"{grid[i][j]:.0f}", ha="center", va="center", fontsize=6)
+
+    plt.tight_layout()
+    plt.show()
+
