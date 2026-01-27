@@ -138,3 +138,37 @@ def plot_jacks_value(V, env, title=None, show_numbers=False):
     plt.tight_layout()
     plt.show()
 
+def plot_value_sweeps(log, env, sweeps=None):
+    x = list(env.states())  # should be 0..100
+    x = sorted(x)
+
+    if sweeps is None:
+        sweeps = [0, 1, 2, len(log["values_by_iter"]) - 1]  # pick a few
+
+    for k in sweeps:
+        V_k = log["values_by_iter"][k]
+        y = [V_k.get(s, 0.0) for s in x]
+        plt.plot(x, y, label=f"sweep {k}")
+
+    plt.xlabel("Capital")
+    plt.ylabel("Value estimate V(s)")
+    plt.legend()
+    plt.show()
+
+def plot_final_policy(policy, env):
+    x = sorted(env.states())
+    y = []
+
+    for s in x:
+        dist = policy.pi(s)
+        if not dist:   # terminal states
+            y.append(0)
+        else:
+            a_star = max(dist, key=dist.get)
+            y.append(a_star)
+
+    plt.plot(x, y)
+    plt.xlabel("Capital")
+    plt.ylabel("Final policy (stake)")
+    plt.show()
+

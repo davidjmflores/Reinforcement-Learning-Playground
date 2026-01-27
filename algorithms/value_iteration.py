@@ -48,8 +48,10 @@ class ValueIteration:
 
     def greedy_policy_from_V(self):
         for s in self.env.states():
+            actions = self.env.actions(s)
+            if not actions: continue
             q = {}
-            for a in self.env.actions(s):
+            for a in actions:
                 q_sa = 0.0
                 for (p, s_prime, r) in self.env.transitions(s, a):
                     q_sa += p * (r + self.gamma * self.v[s_prime])
@@ -59,4 +61,4 @@ class ValueIteration:
             greedy_actions = [a for a, val in q.items()
                               if abs(val - max_q) < self.tolerance]
             
-            self.policy.get_greedy(s, greedy_actions)
+            self.policy.set_greedy(s, greedy_actions)
