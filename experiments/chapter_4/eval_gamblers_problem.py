@@ -10,7 +10,7 @@ pi = ValueIteration(
     env,
     policy,
     v0 = 0.0,
-    theta = 1e-4,
+    theta = 1e-6,
     gamma = 1.0,
 )
 
