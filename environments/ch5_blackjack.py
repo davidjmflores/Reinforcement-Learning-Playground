@@ -88,40 +88,41 @@ class Blackjack:
         return (player_sum, dealer_card_shown, player_usable_ace), r, done
         
     def step(self, s, a, rng):
-        if a not in self.actions:
+        if a not in self._actions:
             raise ValueError(f"Invalid action {a}. Must be one of {self.actions}")
         
-        player_sum, dealer_card_shown, usable_ace = s
-        s_prime = [0, 0, usable_ace]
+        done = False
+        
+        player_sum, dealer_card_shown, player_usable_ace = s
+        s_prime = [0, dealer_card_shown, player_usable_ace]
     
         # Players turn
         # Handles adjusting ace according to new draw, making ace draws 11 if sum below 21, and other draws
         if a == 1 and not self.player_stay: # Player hit
             card = self.draw_card(rng)
-            player_sum, usable_ace = self.add_card(player_sum, usable_ace, card)
+            player_sum, player_usable_ace = self.add_card(player_sum, player_usable_ace, card)
         # Handle stays like else: run dealer till he stays
         elif a == 0 and not self.player_stay: self.player_stay = True
 
         # Dealer turn
-        dealer_hand = dealer_hand_shown + self.dealer_card_hidden
-        if dealer_hand >= 17 and not self.dealer_stay: 
-            s_prime[1] = dealer_hand_shown # Predetermined dealer policy
+        dealer_sum = dealer_card_shown + self.dealer_card_hidden
+        if dealer_sum >= 17 and not self.dealer_stay: 
             self.dealer_stay = True
         else: 
-            draw = int(rng.choice(self.cards, p=self.prob))
-            if (draw == 1) and (dealer_hand + 11 < 21): draw = 11
-            s_prime[1] = dealer_hand_shown + draw
+            card = self.draw_card(rng)
+            dealer_sum, dealer_usable_ace = self.add_card(dealer_sum, dealer_usable_ace, card)
 
         # Comparison
         if self.player_stay == self.dealer_stay == True:
-            if dealer_hand > 21 and player_hand > 21 or dealer_hand == player_hand == 21: r = 0 # Both bust or both win: draw
-            elif dealer_hand == 21 or player_hand > 21: r = -1  # lose
-            elif player_hand == 21 or dealer_hand > 21: r = 1 # win
+            if dealer_sum > 21 and player_sum > 21 or dealer_sum == player_sum == 21: r = 0 # Both bust or both win: draw
+            elif dealer_sum == 21 or player_sum > 21: r = -1  # lose
+            elif player_sum == 21 or dealer_sum > 21: r = 1 # win
             else: 
-                if player_hand > dealer_hand: r = 1
-                elif dealer_hand > player_hand: r =-1
+                if player_sum > dealer_sum: r = 1
+                elif dealer_sum > player_sum: r =-1
                 else: r = 0
-        else: r = 0
+        else: 
+            r = 0
 
         return (s_prime), r, done
     
