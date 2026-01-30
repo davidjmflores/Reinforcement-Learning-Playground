@@ -30,10 +30,8 @@ class Blackjack:
     
     def add_card(self, total, usable_ace, card):
         if card == 1: # Ace drawn
-            if total + 11 <= 21:
-                return total + 11, True
-            else:
-                return total + 1, usable_ace
+            if total + 11 <= 21: return total + 11, True
+            else: return total + 1, usable_ace
         
         total += card
         if total > 21 and usable_ace:
@@ -48,8 +46,6 @@ class Blackjack:
     def reset(self, rng):
         player_sum = 0
         player_usable_ace = False
-        self.player_stay = False
-        self.dealer_stay = False
 
         # Explicit first two draws to check for natural
         player_card_1 = self.draw_card(rng)
@@ -89,42 +85,36 @@ class Blackjack:
         
     def step(self, s, a, rng):
         if a not in self._actions:
-            raise ValueError(f"Invalid action {a}. Must be one of {self.actions}")
+            raise ValueError(f"Invalid action {a}. Must be one of {self._actions}")
         
         done = False
-        
         player_sum, dealer_card_shown, player_usable_ace = s
-        s_prime = [0, dealer_card_shown, player_usable_ace]
+        r = 0
     
         # Players turn
-        # Handles adjusting ace according to new draw, making ace draws 11 if sum below 21, and other draws
-        if a == 1 and not self.player_stay: # Player hit
+        if a == 1: # Player hit
             card = self.draw_card(rng)
             player_sum, player_usable_ace = self.add_card(player_sum, player_usable_ace, card)
-        # Handle stays like else: run dealer till he stays
-        elif a == 0 and not self.player_stay: self.player_stay = True
+            if player_sum > 21: r = -1; done = True
+            return (player_sum, dealer_card_shown, player_usable_ace), r, done
+        elif a == 0: # player stay
+            # Dealer turn
+            dealer_sum, dealer_usable_ace = self.add_card(0, False, dealer_card_shown)
+            dealer_sum, dealer_usable_ace = self.add_card(dealer_sum, dealer_usable_ace, self.dealer_card_hidden)
+            while dealer_sum < 17:
+                card = self.draw_card(rng)
+                dealer_sum, dealer_usable_ace = self.add_card(dealer_sum, dealer_usable_ace, card)
+            if dealer_sum > 21: 
+                r = 1
+                done = True
+                return (player_sum, dealer_card_shown, player_usable_ace), r, done
 
-        # Dealer turn
-        dealer_sum = dealer_card_shown + self.dealer_card_hidden
-        if dealer_sum >= 17 and not self.dealer_stay: 
-            self.dealer_stay = True
-        else: 
-            card = self.draw_card(rng)
-            dealer_sum, dealer_usable_ace = self.add_card(dealer_sum, dealer_usable_ace, card)
+            # Comparison
+            done = True
+            if player_sum > dealer_sum: r = 1
+            elif dealer_sum > player_sum: r = -1
 
-        # Comparison
-        if self.player_stay == self.dealer_stay == True:
-            if dealer_sum > 21 and player_sum > 21 or dealer_sum == player_sum == 21: r = 0 # Both bust or both win: draw
-            elif dealer_sum == 21 or player_sum > 21: r = -1  # lose
-            elif player_sum == 21 or dealer_sum > 21: r = 1 # win
-            else: 
-                if player_sum > dealer_sum: r = 1
-                elif dealer_sum > player_sum: r =-1
-                else: r = 0
-        else: 
-            r = 0
-
-        return (s_prime), r, done
+        return (player_sum, dealer_card_shown, player_usable_ace), r, done
     
     # add transitions function if needed for DP methods
         
