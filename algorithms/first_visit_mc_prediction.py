@@ -5,51 +5,48 @@ class FirstVisitMCPrediction:
         self.policy = policy
         self.env = env
         self.v = {s: v0 for s in self.env.states()}
-        self.returns = np.zeros(self.env.states(), dtype=int)
+        self.returns_sum = {s: 0 for s in self.env.states()}
+        self.returns_count = {s: 0 for s in self.env.states()}
         self.gamma = gamma
 
     def policy_sample(self, s, rng):
         return int(rng.choice(self.env.actions(s), p=self.policy.pi(s)))
 
     def episode(self, rng):
-        s = self.env.s_init
         episode = []
-        while s not in self.env.terminal_state: # not defined. Not sure if this is the best way
+        s, r, done = self.env.reset(rng)
+        while not done:
             a = self.policy_sample(s, rng)
-            s_prime, r = self.env.step(s, a)
+            s_prime, r, done = self.env.step(s, a, rng)
             episode.append((s, a, r))
             s = s_prime
         return episode
 
-    def prediction(self, episodes):
-        '''
-        Docstring for prediction
+    def prediction(self, episodes, rng):
+        for _ in range(episodes):
+            episode = self.episode(rng)
+            T = len(episode)
 
-        Loop forever(for each episode):
-            Generate an episode following pi: S0, A0, R1, S1, A1, R2, ..., ST-1, AT-1, RT
-            G <- 0
-            Loop for each step of episode, t=T-1,T-2,...,0:
-            G <- G * gamma + Rt+1
-            Unless St appears in S0, S1, ..., St-1
-                Append G to Returns(St)
-                V(St) <- Average(Returns(St))
-        
-        :param self: Pg. 92 pseudo code
-        '''
+            # Backward pass:
+            G = 0.0
+            Gs = [0.0] * T                       # Gs[t] = return starting at time t
+            for t in range(T - 1, -1, -1):
+                r = episode[t][2]
+                G = self.gamma * G + r
+                Gs[t] = G
 
-        i = 0
-        while i < episodes:
-            episode = self.episode()
-            for s in self.episode()[0]: # for all states in that episode
-                G = 0
-                n = 0
-                for step in reversed(episode): # where each step is a (S, A, R)
-                    n += 1
-                    if step[0] == s:
-                        self.returns[s] = G
-                        self.v[s] = G / n
-                    else: G = G * self.gamma + step[2]
-            i+=1
-        return self.returns, self.v
+            # 2) Forward pass: first-visit updates
+            seen = set()
+            for t in range(T):
+                s_t = episode[t][0]
+                if s_t in seen:
+                    continue
+                seen.add(s_t)
+
+                self.returns_sum[s_t] += Gs[t]
+                self.returns_count[s_t] += 1
+                self.v[s_t] = self.returns_sum[s_t] / self.returns_count[s_t]
+
+        return self.v
 
 
