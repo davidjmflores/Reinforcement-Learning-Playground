@@ -1,27 +1,38 @@
 # Policy used for policy improvement in PI, VI, and MCES
 
 class TabularStochasticPolicy:
-    def __init__(self, states, actions):
+    def __init__(self, env):
+        self.env = env
+        self.pi_table = {}
 
-        self.actions = list(actions)
-        p = 1.0 / len(self.actions)
-        self.pi_table = {s: {a: p for a in self.actions} for s in states}
+        for s in env.states():
+            actions = list(env.actions(s))
+            if not actions:
+                self.pi_table[s] = {}
+                continue
+
+            p = 1.0 / len(actions)
+            self.pi_table[s] = {a: p for a in actions}
 
     def pi(self, s):
         return self.pi_table[s]
-
-    def snapshot(self):
-        return {s: probs.copy() for s, probs in self.pi_table.items()}
 
     def set_greedy(self, s, greedy_actions):
         if not greedy_actions:
             raise ValueError(f"set_greedy called with empty greedy_actions for state {s}")
 
-        for a in self.actions:
-            self.pi_table[s][a] = 0.0
+        actions = list(self.env.actions(s))
+        if not actions:
+            self.pi_table[s] = {}
+            return
+
+        # zero only legal actions
+        self.pi_table[s] = {a: 0.0 for a in actions}
 
         p = 1.0 / len(greedy_actions)
         for a in greedy_actions:
+            if a not in self.pi_table[s]:
+                raise ValueError(f"Greedy action {a} not legal in state {s}")
             self.pi_table[s][a] = p
 
 class JacksTabularStochasticPolicy:

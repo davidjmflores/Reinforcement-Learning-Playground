@@ -12,8 +12,17 @@ class MCES:
 
     def policy_sample(self, s, rng):
         actions = sorted(self.env.actions(s))
-        probs = [self.policy.pi(s)[a] for a in actions]
+        if not actions:
+            raise ValueError(f"No actions available in state {s}")
+        dist = self.policy.pi(s)
+        probs = [dist.get(a, 0.0) for a in actions]
+        total = sum(probs)
+        if total <= 0:
+            probs = [1.0 / len(actions)] * len(actions)
+        else:
+            probs = [p / total for p in probs]
         return int(rng.choice(actions, p=probs))
+
     
     def episode(self, s0, a0, rng):
         episode = []
@@ -35,8 +44,10 @@ class MCES:
                 s0, a0 = self.env.exploring_start(rng)
             else:
                 s0 = rng.choice(self._states)
-                a0 = rng.choice(list(self.env.actions(s0)))
-
+                actions0 = list(self.env.actions(s0))
+                if not actions0:
+                    continue
+                a0 = rng.choice(actions0)
 
             episode = self.episode(s0, a0, rng)
             T = len(episode)
@@ -73,6 +84,8 @@ class MCES:
                 greedy_actions = [a for a in legal_actions
                                 if abs(self.Q[s_t][a] - max_q) < self.tolerance]
                 self.policy.set_greedy(s_t, greedy_actions)
+
+        return self.Q, self.policy
 
 
 

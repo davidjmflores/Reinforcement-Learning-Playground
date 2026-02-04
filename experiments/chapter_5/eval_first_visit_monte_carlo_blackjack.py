@@ -4,7 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
 
-
 class Stick20Policy:
     def pi(self, s):
         player_sum = s[0]
