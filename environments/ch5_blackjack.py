@@ -18,6 +18,21 @@ class Blackjack:
             4/13 # 10, J, K, Q
         ])
 
+    def exploring_start(self, rng):
+        # Pick player sum, dealer showing, usable ace uniformly
+        player_sum = rng.integers(12, 22)
+        dealer_card_shown = rng.integers(1, 11)
+        usable_ace = bool(rng.integers(0, 2))
+
+        # Pick dealer hidden card uniformly
+        self.dealer_card_hidden = self.draw_card(rng)
+
+        s0 = (player_sum, dealer_card_shown, usable_ace)
+        a0 = rng.choice(list(self._actions))
+
+        return s0, a0
+
+
     def states(self):
         return self._states
     

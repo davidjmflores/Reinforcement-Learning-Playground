@@ -10,11 +10,16 @@ class FirstVisitMCPrediction:
         self.gamma = gamma
 
     def policy_sample(self, s, rng):
-        return int(rng.choice(self.env.actions(s), p=self.policy.pi(s)))
+        actions = sorted(self.env.actions(s))
+        probs = [self.policy.pi(s)[a] for a in actions]
+        return int(rng.choice(actions, p=probs))
 
     def episode(self, rng):
         episode = []
         s, r, done = self.env.reset(rng)
+        if done: 
+            a = 0
+            episode.append((s, a, r))
         while not done:
             a = self.policy_sample(s, rng)
             s_prime, r, done = self.env.step(s, a, rng)

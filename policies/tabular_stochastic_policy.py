@@ -1,3 +1,5 @@
+# Policy used for policy improvement in PI, VI, and MCES
+
 class TabularStochasticPolicy:
     def __init__(self, states, actions):
 
