@@ -1,5 +1,5 @@
 from environments.ch4_gamblers_problem import GamblersProblem
-from algorithms.value_iteration import ValueIteration
+from algorithms.dp.value_iteration import ValueIteration
 from policies.tabular_stochastic_policy import GamblersTabularPolicy
 from experiments.chapter_4.plot_eval_snapshots import plot_value_sweeps, plot_final_policy
 

@@ -1,6 +1,6 @@
 from environments.ch2_stationary_karmedbandit import StationaryKArmedBandit
-from algorithms.epsilon_greedy import EpsilonGreedyAgent
-from algorithms.upper_confidence_bound import UpperConfidenceBound
+from algorithms.bandit.epsilon_greedy import EpsilonGreedyAgent
+from algorithms.bandit.upper_confidence_bound import UpperConfidenceBound
 
 import numpy as np
 import matplotlib.pyplot as plt

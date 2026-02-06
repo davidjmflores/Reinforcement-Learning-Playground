@@ -1,6 +1,6 @@
 from environments.ch5_blackjack import Blackjack
 from policies.tabular_stochastic_policy import TabularStochasticPolicy
-from algorithms.mc_es import MCES
+from algorithms.mc.mces import MCES
 
 import numpy as np
 import matplotlib.pyplot as plt

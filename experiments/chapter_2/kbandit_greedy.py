@@ -1,5 +1,5 @@
 from environments.ch2_stationary_karmedbandit import StationaryKArmedBandit
-from algorithms.greedy import GreedyAgent
+from algorithms.bandit.greedy import GreedyAgent
 import numpy as np
 import matplotlib.pyplot as plt
 

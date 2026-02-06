@@ -1,5 +1,5 @@
 from environments.ch4_jacks_car_rental import JacksCarRental
-from algorithms.policy_iteration import PolicyIteration
+from algorithms.dp.policy_iteration import PolicyIteration
 from policies.tabular_stochastic_policy import JacksTabularStochasticPolicy
 from experiments.chapter_4.plot_eval_snapshots import plot_jacks_policy
 env = JacksCarRental()

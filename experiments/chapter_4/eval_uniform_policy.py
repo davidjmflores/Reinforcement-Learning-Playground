@@ -1,5 +1,5 @@
 from environments.ch4_gridworld_terminating import GridworldTerminating
-from algorithms.iterative_policy_evaluation import IterativePolicyEvaluation
+from algorithms.dp.iterative_policy_evaluation import IterativePolicyEvaluation
 from policies.uniform_random import UniformRandom
 from experiments.chapter_4.plot_eval_snapshots import plot_selected_ks
 

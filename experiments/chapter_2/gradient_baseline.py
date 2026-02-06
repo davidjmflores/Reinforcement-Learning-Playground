@@ -1,5 +1,5 @@
 from environments.ch2_stationary_karmedbandit import StationaryKArmedBandit
-from algorithms.gradient import GradientBanditAgent
+from algorithms.bandit.gradient import GradientBanditAgent
 
 import numpy as np
 import matplotlib.pyplot as plt

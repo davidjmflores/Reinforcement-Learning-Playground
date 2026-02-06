@@ -1,8 +1,8 @@
 from environments.ch5_blackjack import Blackjack
-from algorithms.first_visit_mc_prediction import FirstVisitMCPrediction
+from algorithms.mc.first_visit_mc_prediction import FirstVisitMCPrediction
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
+from mpl_toolkits.mplot3d import Axes3D
 
 class Stick20Policy:
     def pi(self, s):

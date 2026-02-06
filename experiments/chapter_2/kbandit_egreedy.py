@@ -1,5 +1,5 @@
 from environments.ch2_stationary_karmedbandit import StationaryKArmedBandit
-from algorithms.epsilon_greedy import EpsilonGreedyAgent
+from algorithms.bandit.epsilon_greedy import EpsilonGreedyAgent
 import numpy as np
 import matplotlib.pyplot as plt
 

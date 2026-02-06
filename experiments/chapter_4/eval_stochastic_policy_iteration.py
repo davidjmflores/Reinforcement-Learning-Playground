@@ -1,5 +1,5 @@
 from environments.ch4_gridworld_terminating import GridworldTerminating
-from algorithms.policy_iteration import PolicyIteration
+from algorithms.dp.policy_iteration import PolicyIteration
 from policies.tabular_stochastic_policy import TabularStochasticPolicy
 from experiments.chapter_4.plot_eval_snapshots import plot_values_by_policy_iteration, plot_eval_sweeps_for_policy, plot_policy
 

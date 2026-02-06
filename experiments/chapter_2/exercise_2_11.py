@@ -1,10 +1,10 @@
 from environments.ch2_nonstationary_karmedbandit import NonstationaryKArmedBandit
 
-from algorithms.epsilon_greedy import EpsilonGreedyAgent
-from algorithms.alpha_epsilon_greedy import AlphaEpsilonGreedyAgent
-from algorithms.alpha_upper_confidence_bound import AlphaUpperConfidenceBound
-from algorithms.gradient import GradientBanditAgent
-from algorithms.alpha_greedy import AlphaGreedyAgent
+from algorithms.bandit.epsilon_greedy import EpsilonGreedyAgent
+from algorithms.bandit.alpha_epsilon_greedy import AlphaEpsilonGreedyAgent
+from algorithms.bandit.alpha_upper_confidence_bound import AlphaUpperConfidenceBound
+from algorithms.bandit.gradient import GradientBanditAgent
+from algorithms.bandit.alpha_greedy import AlphaGreedyAgent
 
 import numpy as np
 import matplotlib.pyplot as plt

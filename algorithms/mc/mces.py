@@ -65,7 +65,6 @@ class MCES:
             for t in range(T):
                 s_t = episode[t][0]
                 a_t = episode[t][1]
-                r_t = episode[t][2]
 
                 q_sa = (s_t, a_t)
                 if q_sa in seen:

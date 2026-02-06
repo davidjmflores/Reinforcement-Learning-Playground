@@ -1,6 +1,6 @@
 from environments.ch2_nonstationary_karmedbandit import NonstationaryKArmedBandit
-from algorithms.epsilon_greedy import EpsilonGreedyAgent
-from algorithms.greedy import GreedyAgent
+from algorithms.bandit.epsilon_greedy import EpsilonGreedyAgent
+from algorithms.bandit.greedy import GreedyAgent
 
 import numpy as np
 import matplotlib.pyplot as plt
