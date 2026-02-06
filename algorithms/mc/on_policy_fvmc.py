@@ -22,7 +22,6 @@ class EpsilonSoftPolicy:
             a_greedy = rng.choice(list(actions))
             self.pi_table[s][a_greedy] += 1.0 - self.epsilon
 
-
     def pi(self, s):
         return self.pi_table[s]
 
