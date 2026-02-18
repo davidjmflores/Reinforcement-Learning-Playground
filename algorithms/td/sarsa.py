@@ -1,84 +1,63 @@
 # Sarsa (On-policy TD control) for estimating Q
 class EpsilonGreedyPolicy: # Behavioral Policy
-    def __init__(self, env, epsilon, rng):
+    def __init__(self, env, epsilon):
        self.env = env
        self.epsilon = epsilon
-       self.rng = rng
-       self.pi_table = {}
 
-       for s in env.states():
-          actions = list(self.env.actions(s))
-          if not actions:
-             self.pi_table[s] = {}
-             continue
-          
-          # set all A to have p = epsilon / |A(s)|
-          p = self.epsilon / len(actions)
-          self.pi_table[s] = {a: p for a in actions}
-
-          # randomly select an init greedy action
-          a_greedy = rng.choice(actions)
-          self.pi_table[s][a_greedy] += 1.0 - self.epsilon
-    
-    def pi(self, s): return self.pi_table[s]
-    
-    def make_greedy(self, s, greedy_action):
-       actions = list(self.env.actions(s))
-       if not actions: return
-
-       base = self.epsilon / len(actions)
-       dist = {a: base for a in actions}
-       dist[greedy_action] += 1.0 - self.epsilon
-       self.pi_table[s] = dist
-
-    def policy_sample(self, s):
+    def sample(self, rng, s, Q):
         actions = list(self.env.actions(s))
         if not actions: raise ValueError(f"No actions available in state {s}")
 
-        dist = self.pi(s)
-        probs = [dist.get(a, 0.0) for a in actions]
-        total = sum(probs)
-        if total <= 0: probs = [1.0 / len(actions)] * len(actions)
-        else: probs = [x / total for x in probs]
-        return self.rng.choice(actions, p=probs)
+        if rng.random() < self.epsilon:
+           return rng.choice(actions)
+        
+        # exploit
+        q_vals = [Q.get(s, {}).get(a, 0.0) for a in actions]
+
+        max_q = max(q_vals)
+        greedy_actions = [a for a, q in zip(actions, q_vals) if q == max_q]
+        return rng.choice(greedy_actions)
 
 class Sarsa:
-    def __init__(self, env, gamma, alpha, epsilon, rng, threshold):
-        self.env = env
-        self.epsilon = epsilon
-        self.policy = EpsilonGreedyPolicy(env, epsilon, rng)
-        self.gamma = gamma
-        self.alpha = alpha
-        if not 0 < self.alpha <= 1: raise ValueError(f"Alpha value not within bounds (0, 1]: alpha = {self.alpha}")
-        self.threshold = threshold
-        
-        # I feel like  should stop using Q initialization like this. When states become massive its
-        # impractical to initialize for ll states. I should just initialize when reached, right?
-        self.Q = {s: {a: 0.0 for a in self.env.actions(s)} for s in self.env.states()}
+   def __init__(self, env, gamma, alpha, epsilon, rng):
+      self.env = env
+      self.epsilon = epsilon
+      self.policy = EpsilonGreedyPolicy(env, epsilon)
+      self.gamma = gamma
+      self.alpha = alpha
+      self.rng = rng
+      if not 0 < self.alpha <= 1: raise ValueError(f"Alpha value not within bounds (0, 1]: alpha = {self.alpha}")
+      self.Q = {}
 
+   def q(self, s, a):
+      if s not in self.Q: self.Q[s] = {}
+      if a not in self.Q[s]: self.Q[s][a] = 0.0
+      return self.Q[s][a]
 
-    def run(self, episodes):
-        for _ in range(episodes):
-           info = {}
-           s_t = self.env.reset()
-           a_t = self.policy.sample_policy(s_t)
-           
-           while True:
-            s_prime, r, done, i = self.env.step(a_t)
-            a_prime = self.policy.sample_policy(s_prime)
-            
-            # This can be done instead of Q init in init, but idk if its computationally better
-            if self.Q[s_t][a_t] is None:
-               self.Q[s_t][a_t] = 0
-            if self.Q[s_prime][a_prime] is None:
-               self.Q[s_prime][a_prime] = 0
+   def run(self, episodes):
+      logs = []
+      for _ in range(episodes):
+         episode_info = []
+         s_t, reset_info = self.env.reset()
+         episode_info.append(reset_info)
+         a_t = self.policy.sample(self.rng, s_t, self.Q)
 
-            self.Q[s_t][a_t] += self.alpha * (r + self.gamma * self.Q[s_prime][a_prime] - self.Q[s_t][a_t])
+         while True:
+            s_prime, r, terminated, truncated, step_info = self.env.step(a_t)
+            episode_info.append(step_info)
+            done = terminated or truncated
+
+            q_sa = self.q(s_t, a_t)
+
+            if done: target = r
+            else:
+               a_prime = self.policy.sample(self.rng, s_prime, self.Q)
+               target = r + self.gamma * self.q(s_prime, a_prime)
+
+            self.Q[s_t][a_t] = q_sa + self.alpha * (target - q_sa)
 
             if done: break
-
-            s_t = s_prime
-            a_t = a_prime
-            info.append(i)
-        
-        return self.Q, info
+            s_t, a_t = s_prime, a_prime
+         logs.append(episode_info)
+      
+      return self.Q, logs
