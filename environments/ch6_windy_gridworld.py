@@ -11,18 +11,13 @@ class WindyGridworld:
         self._goal  = (3, 7)
         self._curr_state = self._start # internalized for compatibility w/ gym
 
-        self._states = []
-        for r in range(self._rows):
-            for c in range(self._cols):
-                self._states.append((r, c))
+        self._states = [(r, c) for r in range(self._rows) for c in range(self._cols)]
 
         self.np_random = np.random.default_rng()
 
-    
     def actions(self, s=None): return self._actions
 
-    # Added for MC
-    def states(self): return [(r, c) for r in range(self._rows) for c in range(self._cols)]
+    def states(self): return self._states # Added for MC
 
     def reset(self, seed=None): 
         if seed is not None: self.np_random = np.random.default_rng(seed)

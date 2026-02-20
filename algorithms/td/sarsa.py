@@ -24,7 +24,6 @@ class Sarsa:
       self.gamma = gamma
       self.alpha = alpha
       self.rng = rng
-      self.total_steps = 0
       if not 0 < self.alpha <= 1: raise ValueError(f"Alpha value not within bounds (0, 1]: alpha = {self.alpha}")
       self.Q = {}
 
@@ -34,8 +33,9 @@ class Sarsa:
       return self.Q[s][a]
 
    def run(self, episodes):
-      episode_end_steps = []
+      episode_reward_sums = []
       for ep in range(episodes):
+         total_reward = 0
          s_t, _ = self.env.reset()
          a_t = self.policy.sample(self.rng, s_t, self.Q)
 
@@ -51,12 +51,12 @@ class Sarsa:
 
             self.Q[s_t][a_t] = q_sa + self.alpha * (target - q_sa)
 
-            self.total_steps += 1
+            total_reward += r
 
             if done: 
-               episode_end_steps.append(self.total_steps)
+               episode_reward_sums.append(total_reward)
                break
             
             s_t, a_t = s_prime, a_prime
       
-      return self.Q, episode_end_steps
+      return self.Q, episode_reward_sums

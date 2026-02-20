@@ -18,7 +18,7 @@ class BehaviorPolicy: # epsilon-greedy
         return greedy_actions[rng.integers(len(greedy_actions))]
 
 class QLearning:
-    def __init__(self, rng, env, alpha, epsilon, gamma, policy_b=None):
+    def __init__(self, env, rng, alpha, epsilon, gamma, policy_b=None):
         self.env = env
         self.rng = rng
 
@@ -40,15 +40,16 @@ class QLearning:
         return self.Q[s][a]
     
     def run(self, episodes):
-        info = []
+        episode_rewards_sums = []
         for ep in range(episodes):
+            total_reward = 0
             s_t, reset_info = self.env.reset()
-            info.append(reset_info)
+            # info.append(reset_info)
         
             while True:
                 a_t = self.policy_b.sample(self.rng, s_t, self.Q)
                 s_prime, r, terminated, truncated, step_info = self.env.step(a_t)
-                info.append(step_info)
+                # info.append(step_info)
                 done = terminated or truncated
                 
                 q_sa = self.q(s_t, a_t) # used to add s_t and a_t to Q set
@@ -60,8 +61,12 @@ class QLearning:
 
                 self.Q[s_t][a_t] += self.alpha * (target - q_sa)
 
-                if done: break
+                total_reward += r
+                
+                if done: 
+                    episode_rewards_sums.append(total_reward)
+                    break
                 s_t = s_prime
         
-        return self.Q, info
+        return self.Q, episode_rewards_sums
             
