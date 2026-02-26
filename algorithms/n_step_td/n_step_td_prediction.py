@@ -61,7 +61,6 @@ class NStepTD:
                 if tau >= 0:
                     G = 0.0
                     t_end = tau + self.n if T == INF else min(tau + self.n, T)
-
                     s_tau = S[tau % buf_len]
 
                     for i in range(tau + 1, t_end + 1): 
