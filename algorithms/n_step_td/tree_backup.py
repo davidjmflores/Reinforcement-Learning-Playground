@@ -1,13 +1,19 @@
-class GreedyPolicy: # Target Policy
+class GreedyPolicy:  # Target Policy
     def __init__(self, env):
         self.env = env
 
     def prob(self, s, a, Q):
-        return 0
-    
-    def make_greedy(self, s, Q):
-        return 0
-    
+        actions = list(self.env.actions(s))
+        if not actions: return 0.0
+
+        q_vals = [Q.get(s, {}).get(a_i, 0.0) for a_i in actions]
+        max_q = max(q_vals)
+
+        greedy = [a_i for a_i, q in zip(actions, q_vals) if q == max_q]
+        if not greedy: return 0.0
+
+        return 1.0 / len(greedy) if a in greedy else 0.0
+
 class EpsilonGreedyPolicy: # Behavioral Policy
    def __init__(self, env, epsilon):
       self.env = env
@@ -57,26 +63,53 @@ class NStepTreeBackup:
             R = [0.0] * buf_len
 
             s, reset_info = self.env.reset(self.rng)
-            a = self.b.sample(self.rng, s)
+            # info.append(reset_info)
+            a = self.b.sample(self.rng, s, self.Q)
             S[t % buf_len] = s
             A[t % buf_len] = a
 
             while True:
                 if t < T:
                     s_prime, r, terminated, truncated, step_info = self.env.step(a)
+                    # info.append(step_info)
                     done = terminated or truncated
                     S[(t + 1) % buf_len] = s_prime
                     R[(t + 1) % buf_len] = r
 
                     if not done:
-                        a_prime = self.b.sample(s_prime)
+                        a_prime = self.b.sample(self.rng, s_prime, self.Q)
                         A[(t + 1) % buf_len] = a_prime
                         a = a_prime
-                    s = s_prime
-                tau = t - self.n + 1
+                    else: T = t + 1
+                tau = t + 1 - self.n
+
                 if tau >= 0:
                     G = 0.0
+                    G_temp = 0.0 # for in-loop summations w/ gamma multiplication
 
-                    # will resume tmrw
+                    if t + 1 >= T: G = R[T % buf_len]
+                    else:
+                        s_tp1 = S[(t + 1) % buf_len]
+                        for a_i in self.env.actions(s_tp1):
+                            G_temp += self.pi.prob(s_tp1, a_i, self.Q) * self.q(s_tp1, a_i)
+                        G = R[(t + 1) % buf_len] + self.gamma * G_temp
+
+                    for k in range(min(t, T - 1), tau, -1):
+                        s_k = S[k % buf_len]
+                        a_k = A[k % buf_len]
+
+                        G_temp = 0.0
+                        for a_i in self.env.actions(s_k):
+                            if a_i == a_k: continue
+                            G_temp += self.pi.prob(s_k, a_i, self.Q) * self.q(s_k, a_i)
+                        G = R[k % buf_len] + self.gamma * G_temp + self.gamma * self.pi.prob(s_k, a_k, self.Q) * G
+                    
+                    q_sa = self.q(S[(tau) % buf_len], A[(tau) % buf_len])
+                    self.Q[S[(tau) % buf_len]][A[(tau) % buf_len]] += self.alpha * (G - q_sa)
+                
+                if tau == T - 1: break
+                s = s_prime
+                t += 1
+        return self.Q
 
 
