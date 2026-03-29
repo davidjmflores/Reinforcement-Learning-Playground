@@ -35,8 +35,8 @@ class DynaMaze:
         row, col = self.curr_state
         dr, dc = a
 
-        r_prime = min(self.rows - 1, max(0, r + dr))
-        c_prime = min(self.cols - 1, max(0, c + dc))
+        r_prime = min(self.rows - 1, max(0, row + dr))
+        c_prime = min(self.cols - 1, max(0, col + dc))
         
         s_prime = (r_prime, c_prime)
 

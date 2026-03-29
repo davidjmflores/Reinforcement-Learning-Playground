@@ -58,8 +58,9 @@ class DynaQ:
             self.update_q(s, a, r, s_prime, done)
 
     def run(self, episodes):
-        # info = []
-        for _ in range(episodes):
+        steps_per_episode = [None] * episodes
+        for ep in range(episodes):
+            steps = 0
             s_t, reset_info = self.env.reset(self.rng)
             done = False
             # info.append(reset_info)
@@ -67,7 +68,7 @@ class DynaQ:
             while not done:
                 a_t = self.behavior.sample(self.rng, s_t, self.Q)
 
-                s_tp1, r_tp1, terminated, truncated, step_info = self.env.step(s_t, a_t)
+                s_tp1, r_tp1, terminated, truncated, step_info = self.env.step(a_t)
                 # info.append(step_info)
                 done = terminated or truncated
 
@@ -76,5 +77,7 @@ class DynaQ:
                 self.planning_step()
 
                 s_t = s_tp1
+                steps += 1
+            steps_per_episode[ep] = steps
 
-        return self.Q
+        return self.Q, steps_per_episode
