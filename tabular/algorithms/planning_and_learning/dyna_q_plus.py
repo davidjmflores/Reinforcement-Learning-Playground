@@ -5,89 +5,101 @@ class EpsilonGreedy:
 
     def sample(self, rng, s, Q):
         actions = list(self.env.actions(s))
-        if not actions: raise ValueError(f"No actions for state: {s}")
+        if not actions:
+            raise ValueError(f"No actions for state: {s}")
 
-        if rng.random() < self.epsilon: return actions[rng.integers(len(actions))]
+        if rng.random() < self.epsilon:
+            return actions[rng.integers(len(actions))]
 
         q_vals = [Q.get(s, {}).get(a, 0.0) for a in actions]
         q_max = max(q_vals)
         greedy_actions = [a for a, q in zip(actions, q_vals) if q == q_max]
         return greedy_actions[rng.integers(len(greedy_actions))]
 
-class DynaQ:
-    def __init__(self, rng, env, epsilon, gamma, alpha, n):
+
+class DynaQPlus:
+    def __init__(self, rng, env, epsilon, gamma, alpha, n, kappa):
         self.rng = rng
         self.env = env
-        self.gamma = gamma 
+        self.gamma = gamma
         self.alpha = alpha
-        self.n = n # represents iterations of planning per step (not t-steps)
+        self.n = n
+        self.kappa = kappa
 
         self.Q = {}
-        self.model = {} # model[s][a] = (r, s_prime, done)
-
+        self.model = {}      # model[s][a] = (r, s_prime, done)
+        self.last_seen = {}  # last_seen[s][a] = real timestep of last actual visit
         self.behavior = EpsilonGreedy(self.env, epsilon)
-    
+
     def q_max(self, s):
         actions = list(self.env.actions(s))
-        if not actions: return 0.0
-
+        if not actions:
+            return 0.0
         return max(self.Q.get(s, {}).get(a, 0.0) for a in actions)
-    
+
     def update_q(self, s, a, r, s_prime, done):
         target = r if done else r + self.gamma * self.q_max(s_prime)
         self.Q.setdefault(s, {})
         self.Q[s].setdefault(a, 0.0)
         self.Q[s][a] += self.alpha * (target - self.Q[s][a])
-    
-    def update_model(self, s, a, r, s_prime, done):
-        self.model.setdefault(s, {})
-        self.model[s][a] = (r, s_prime, done)
 
-    def planning_step(self):
+    def ensure_state_in_model(self, s):
+        if s in self.model:
+            return
+
+        self.model[s] = {}
+        self.last_seen[s] = {}
+
+        for a in self.env.actions(s):
+            self.model[s][a] = (0.0, s, False)
+            self.last_seen[s][a] = 0
+
+    def update_model(self, s, a, r, s_prime, done, t):
+        self.ensure_state_in_model(s)
+        self.model[s][a] = (r, s_prime, done)
+        self.last_seen[s][a] = t
+
+    def planning_step(self, t):
         if not self.model:
             return
 
-        for _ in range(self.n):
-            states = list(self.model.keys())
-            s = states[self.rng.integers(len(states))]
+        states = list(self.model.keys())
 
-            actions_taken_in_s = list(self.model[s].keys())
-            a = actions_taken_in_s[self.rng.integers(len(actions_taken_in_s))]
+        for _ in range(self.n):
+            s = states[self.rng.integers(len(states))]
+            actions = list(self.model[s].keys())
+            a = actions[self.rng.integers(len(actions))]
 
             r, s_prime, done = self.model[s][a]
-            self.update_q(s, a, r, s_prime, done)
+            tau = t - self.last_seen[s][a]
+            bonus = self.kappa * (tau ** 0.5)
+
+            self.update_q(s, a, r + bonus, s_prime, done)
 
     def run(self, episodes):
         r_cumulative = []
         t = 0
         cumulative = 0.0
 
-        steps_per_episode = [None] * episodes
-
         for ep in range(episodes):
-            steps = 0
             s_t, reset_info = self.env.reset(self.rng)
             done = False
-            # info.append(reset_info)
 
             while not done:
                 a_t = self.behavior.sample(self.rng, s_t, self.Q)
 
                 s_tp1, r_tp1, terminated, truncated, step_info = self.env.step(a_t)
-                # info.append(step_info)
                 done = terminated or truncated
 
                 t += 1
 
                 self.update_q(s_t, a_t, r_tp1, s_tp1, done)
-                self.update_model(s_t, a_t, r_tp1, s_tp1, done)
-                self.planning_step()
+                self.update_model(s_t, a_t, r_tp1, s_tp1, done, t)
+                self.planning_step(t)
 
                 cumulative += r_tp1
                 r_cumulative.append(cumulative)
-                
+
                 s_t = s_tp1
-                steps += 1
-            steps_per_episode[ep] = steps
 
         return self.Q, r_cumulative
